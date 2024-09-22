@@ -89,7 +89,10 @@ const App: React.FC = () => {
                 nftData.value.uri = nftData.value.uri.slice(0, -1);
               }
               const data = await pinata.gateways.get(`https://beige-sophisticated-baboon-74.mypinata.cloud/ipfs/${nftData.value.uri}`);
-              const mergedNFTData = { ...nftData.value, ...data.data};
+              const mergedNFTData = {
+                ...(typeof nftData.value === 'object' ? nftData.value : {}),
+                ...(typeof data.data === 'object' ? data.data : {}),
+              };
               nfts.push(mergedNFTData);
           }
 
@@ -141,7 +144,7 @@ const App: React.FC = () => {
         uri = uri.padEnd(60, '0');  // Pads with '0' characters
       }
       console.log(state.address, subID, uri);
-      await state.contract.functions.mint(subID || null, uri).call();
+      await state.contract.functions.mint(subID, uri).call();
 
     } catch (error) {
       console.error('Error minting NFT:', error);

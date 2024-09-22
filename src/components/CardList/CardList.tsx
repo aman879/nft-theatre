@@ -1,17 +1,12 @@
 import React from "react";
 import Card from "../Card/Card";
-import { BN } from 'fuels';
 
 interface NFTData {
   id: string;
-  data: {
-    data: {
-      name: string;
-      description: string;
-      image: string;
-    };
-  };
+  name: string;
   price: number;
+  description: string;
+  image: string;
 }
 
 interface CardListProps {
@@ -26,7 +21,6 @@ const CardList: React.FC<CardListProps> = ({ userNFTs }) => {
       return (
         <Card
           key={nft.id}
-          id={nft.id}
           name={nft.name}
           price={nft.price}
           description={nft.description}

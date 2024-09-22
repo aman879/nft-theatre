@@ -1,0 +1,36 @@
+/* Card.css */
+.card-container {
+    text-align: center;              
+    background-color: #f0f4f8;       
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    display: inline-block;          
+    border-radius: 10px;             
+    padding: 20px;                   
+    margin: 15px;                     
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+  }
+  
+  .card-container:hover {
+    background-color: #e0e7eb;        
+    transform: scale(1.05);          
+  }
+  
+  .card-image {
+    width: 200px;                    
+    height: 200px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .card-details h2 {
+    font-size: 24px;
+    margin-bottom: 10px;
+    color: #333;
+  }
+  
+  .card-details p {
+    font-size: 16px;
+    color: #555;
+  }
+  

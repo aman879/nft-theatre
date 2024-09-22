@@ -3,11 +3,10 @@ import { useDropzone } from 'react-dropzone';
 import './Mint.css';
 
 interface MintProps {
-    uploadToPinata: (file: File, name: string, description: string) => Promise<string>;
-    mintNFT: (name: string, price: string, symbol: string, description: string, uri: string) => void;
+    uploadToPinata: (file: File, name: string, description: string, price: string) => Promise<string>;
+    mintNFT: (uri: string) => void;
 }
 
-// Define a custom type for the file with a preview property
 interface FileWithPreview extends File {
     preview: string;
 }
@@ -15,7 +14,6 @@ interface FileWithPreview extends File {
 const Mint: React.FC<MintProps> = ({ uploadToPinata, mintNFT }) => {
     const [file, setFile] = useState<FileWithPreview | null>(null);
     const [name, setName] = useState('');
-    const [symbol, setSymbol] = useState('');
     const [description, setDescription] = useState('');
     const [price, setPrice] = useState('');
     const [isMinting, setIsMinting] = useState(false);
@@ -43,8 +41,8 @@ const Mint: React.FC<MintProps> = ({ uploadToPinata, mintNFT }) => {
         setIsMinting(true);
 
         try {
-            const IpfsHash = await uploadToPinata(file, name, description);
-            mintNFT(name, price, symbol, description, IpfsHash);
+            const IpfsHash = await uploadToPinata(file, name, description, price);
+            mintNFT(IpfsHash);
             clearImage();
         } catch (e) {
             console.log(e);
@@ -82,16 +80,6 @@ const Mint: React.FC<MintProps> = ({ uploadToPinata, mintNFT }) => {
                     value={name} 
                     onChange={(e) => setName(e.target.value)} 
                     placeholder="Enter NFT Name" 
-                />
-            </div>
-
-            <div className="form-field">
-                <label>Symbol:</label>
-                <input 
-                    type="text" 
-                    value={symbol} 
-                    onChange={(e) => setSymbol(e.target.value)} 
-                    placeholder="Enter NFT Symbol" 
                 />
             </div>
 

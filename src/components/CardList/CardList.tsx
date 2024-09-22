@@ -19,12 +19,10 @@ interface CardListProps {
 }
 
 const CardList: React.FC<CardListProps> = ({ userNFTs }) => {
-  console.log(userNFTs);
   
   let cardComponents: JSX.Element[] = [];
   if (userNFTs) {
     cardComponents = userNFTs.map((nft) => {
-      console.log(nft)
       return (
         <Card
           key={nft.id}
@@ -41,7 +39,6 @@ const CardList: React.FC<CardListProps> = ({ userNFTs }) => {
 
   return (
     <div>
-      <h1>Your Minted NFTs</h1>
       {userNFTs.length === 0 ? (
         <p>No NFTs found.</p>
       ) : (

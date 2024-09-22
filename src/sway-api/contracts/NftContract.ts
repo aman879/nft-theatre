@@ -35,8 +35,8 @@ export type AssetIdInput = { bits: string };
 export type AssetIdOutput = AssetIdInput;
 export type ContractIdInput = { bits: string };
 export type ContractIdOutput = ContractIdInput;
-export type NFTDataInput = { id: BigNumberish, price: BigNumberish, owner: IdentityInput, uri: string };
-export type NFTDataOutput = { id: BN, price: BN, owner: IdentityOutput, uri: string };
+export type NFTDataInput = { id: BigNumberish, owner: IdentityInput, uri: string };
+export type NFTDataOutput = { id: BN, owner: IdentityOutput, uri: string };
 
 const abi = {
   "programType": "contract",
@@ -142,10 +142,6 @@ const abi = {
           "typeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
         },
         {
-          "name": "price",
-          "typeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
-        },
-        {
           "name": "owner",
           "typeId": 1
         },
@@ -238,10 +234,6 @@ const abi = {
           "concreteTypeId": "0c2beb9013490c4f753f2757dfe2d8340b22ce3827d596d81d249b7038033cb6"
         },
         {
-          "name": "_price",
-          "concreteTypeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
-        },
-        {
           "name": "_uri",
           "concreteTypeId": "7d01ef1a17787dea629de1bf499142ae506f0a213f985243d18928aef5354429"
         }
@@ -306,7 +298,7 @@ export class NftContract extends Contract {
     constructor: InvokeFunction<[], void>;
     get_nft_data: InvokeFunction<[id: BigNumberish], NFTDataOutput>;
     get_total_count: InvokeFunction<[], BN>;
-    mint: InvokeFunction<[sub_id: Option<string>, _price: BigNumberish, _uri: string], AssetIdOutput>;
+    mint: InvokeFunction<[sub_id: Option<string>, _uri: string], AssetIdOutput>;
   };
 
   constructor(

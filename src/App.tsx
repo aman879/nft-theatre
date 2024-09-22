@@ -15,7 +15,7 @@ import {
   useIsConnected,
   useWallet,
 } from "@fuels/react";
-import { bn, getMintedAssetId, BN } from 'fuels';
+import {  BN } from 'fuels';
 
 // Define the type for your state
 interface AppState {
@@ -25,10 +25,6 @@ interface AppState {
   nfts: any[];
 }
 
-interface AppProps {
-  uploadToPinata: (file: File, name: string, description: string) => Promise<string>;
-  mintNFT: (name: string, price: string, symbol: string, description: string, uri: string) => Promise<void>;
-}
 
 
 const pinata = new PinataSDK({
@@ -112,7 +108,7 @@ const App: React.FC = () => {
     setState(prev => ({ ...prev, route }));
   };
 
-  const uploadToPinata = async (file: File, name: string, description: string): Promise<string> => {
+  const uploadToPinata = async (file: File, name: string, description: string, price: string): Promise<string> => {
     if (!file) {
         throw new Error("File is required");
     }
@@ -122,6 +118,7 @@ const App: React.FC = () => {
         const metadata = await pinata.upload.json({
             name: name,
             description: description,
+            price: price,
             image: `https://beige-sophisticated-baboon-74.mypinata.cloud/ipfs/${uploadImage.IpfsHash}`,
         });
         return metadata.IpfsHash;
@@ -132,7 +129,7 @@ const App: React.FC = () => {
   };
 
 
-  const mintNFT = async (name: string, symbol: string, price: number, description: string, uri: string): Promise<void> => {
+  const mintNFT = async (uri: string): Promise<void> => {
     if(!state.contract) {
       return alert("contract not loaded");
     }
@@ -144,8 +141,7 @@ const App: React.FC = () => {
         uri = uri.padEnd(60, '0');  // Pads with '0' characters
       }
       console.log(state.address, subID, uri);
-      const priceInput = bn.parseUnits(price.toString());
-      await state.contract.functions.mint(subID || null, priceInput, uri).call();
+      await state.contract.functions.mint(subID || null, uri).call();
 
     } catch (error) {
       console.error('Error minting NFT:', error);
@@ -167,7 +163,11 @@ const App: React.FC = () => {
       ) : state.route === "mint" ? (
         <Mint uploadToPinata={uploadToPinata} mintNFT={mintNFT} />
       ) : (
-        <MyNFT />
+        <MyNFT 
+          myNfts={state.nfts} 
+          isConnected={isConnected} 
+          userAddress={state.address}
+        />
       )}
     </div>
   );

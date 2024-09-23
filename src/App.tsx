@@ -11,6 +11,7 @@ import Notification from './components/Notification/Notification'; // Import the
 import contractId from "../src/contracts/address.json";
 import jws from "../src/contracts/key.json";
 import { NftContract } from "./sway-api/contracts/NftContract";
+import Scroll from './components/Scroll/Scroll';
 import { 
   useIsConnected,
   useWallet,
@@ -196,7 +197,9 @@ const App: React.FC = () => {
         isInstalled={state.isInstalled}
       />
       {state.route === "explore" ? (
-        <Explore nfts={state.nfts} isConnected={isConnected} />
+        <Scroll>
+          <Explore nfts={state.nfts} isConnected={isConnected} />
+        </Scroll>
       ) : state.route === "mint" ? (
         <Mint uploadToPinata={uploadToPinata} mintNFT={mintNFT} />
       ) : (

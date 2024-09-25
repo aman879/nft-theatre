@@ -203,7 +203,7 @@ const App: React.FC = () => {
         res = wait.transactionResult.isStatusSuccess;
         setState(prev => ({
           ...prev,
-          notification: { message: 'Enjoy your Video', type: 'success' }
+          notification: { message: 'Enjoy your Video, Please do not reload or change tab or pages', type: 'success' }
         }));
       } catch (e) {
         console.log("error", e);

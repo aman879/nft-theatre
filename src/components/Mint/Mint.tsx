@@ -4,7 +4,7 @@ import './Mint.css';
 
 interface MintProps {
     uploadToPinata: (file: File, name: string, description: string, price: string) => Promise<string>;
-    mintNFT: (uri: string) => void;
+    mintNFT: (uri: string, price: string) => void;
 }
 
 interface FileWithPreview extends File {
@@ -18,12 +18,13 @@ const Mint: React.FC<MintProps> = ({ uploadToPinata, mintNFT }) => {
     const [price, setPrice] = useState('');
     const [isMinting, setIsMinting] = useState(false);
 
-    const { getRootProps, getInputProps } = useDropzone({
-        accept: { 'image/*': [] },
+    const { getRootProps, getInputProps, fileRejections } = useDropzone({
+        accept: {'video/*': [] },
+        maxSize: 2000000, 
         onDrop: (acceptedFiles) => {
             const previewFile = Object.assign(acceptedFiles[0], {
                 preview: URL.createObjectURL(acceptedFiles[0]),
-            }) as FileWithPreview; // Cast to FileWithPreview
+            }) as FileWithPreview;
             setFile(previewFile);
         },
     });
@@ -33,7 +34,7 @@ const Mint: React.FC<MintProps> = ({ uploadToPinata, mintNFT }) => {
     };
 
     const handleMint = async () => {
-        if ( !file || !name || !description || !price) {
+        if (!file || !name || !description || !price) {
             alert('Please complete all fields');
             return;
         }
@@ -42,7 +43,8 @@ const Mint: React.FC<MintProps> = ({ uploadToPinata, mintNFT }) => {
 
         try {
             const IpfsHash = await uploadToPinata(file, name, description, price);
-            mintNFT(IpfsHash);
+            // const IpfsHash = `bafkreifw25xdtob666hxqytrgmkffqajdhgann5rfw75le6a57djsrso24`
+            await mintNFT(IpfsHash, price);
             clearImage();
         } catch (e) {
             console.log(e);
@@ -58,12 +60,17 @@ const Mint: React.FC<MintProps> = ({ uploadToPinata, mintNFT }) => {
                 <input {...getInputProps()} />
                 {file ? (
                     <div>
-                        <img src={file.preview} alt="Preview" className="preview-image" />
+
+                        <video src={file.preview} controls className="preview-video" />
+
                     </div>
                 ) : (
-                    <p>Drag & drop an image file, or click to select one</p>
+                    <p>Drag & drop video file (max 2 MB), or click to select one</p>
                 )}
             </div>
+            {fileRejections.length > 0 && (
+                <p className="error-message">File size exceeds 2 MB. Please upload a smaller file.</p>
+            )}
             {file && (
                 <button 
                     className='mint-button'
@@ -95,17 +102,15 @@ const Mint: React.FC<MintProps> = ({ uploadToPinata, mintNFT }) => {
             <div className="form-field">
                 <label>Price (in ETH):</label>
                 <input
-                        id="price"
-                        type="number"
-                        required
-                        min="0"
-                        step="any"
-                        inputMode="decimal"
-                        placeholder="0.00"
-                        onChange={(e) => {
-                          setPrice(e.target.value);
-                        }}
-                      />
+                    id="price"
+                    type="number"
+                    required
+                    min="0"
+                    step="any"
+                    inputMode="decimal"
+                    placeholder="0.00"
+                    onChange={(e) => setPrice(e.target.value)}
+                />
             </div>
 
             <button onClick={handleMint} disabled={isMinting} className='mint-button'>

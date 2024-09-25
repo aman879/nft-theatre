@@ -18,7 +18,7 @@ import {
   useConnect,
   useConnectors,
 } from "@fuels/react";
-import {  BN } from 'fuels';
+import { BN, bn } from 'fuels';
 
 interface AppState {
   route: string;
@@ -27,6 +27,7 @@ interface AppState {
   nfts: any[];
   isInstalled: boolean;
   notification: { message: string, type: 'success' | 'error' | 'loading' } | null;
+  shouldFetchNFTs: boolean; // New state variable to control NFT fetching
 }
 
 const pinata = new PinataSDK({
@@ -44,6 +45,7 @@ const App: React.FC = () => {
     nfts: [],
     isInstalled: false,
     notification: null,
+    shouldFetchNFTs: true, 
   });
 
   const { connect } = useConnect();
@@ -74,7 +76,7 @@ const App: React.FC = () => {
     async function getContract() {
       if (isConnected && wallet) {
         const nftContract = new NftContract(CONTRACT_ID, wallet);
-        setState(prev => ({ ...prev, contract: nftContract }));
+        setState(prev => ({ ...prev, contract: nftContract, shouldFetchNFTs: true })); 
       }
     }
     getContract();
@@ -82,40 +84,40 @@ const App: React.FC = () => {
 
   useEffect(() => {
     async function getAllNFTs() {
-      if (state.contract !== null) {
+      if (state.contract !== null && state.shouldFetchNFTs) { 
         try {
-
-            setState(prev => ({
-              ...prev,
-              notification: { message: 'Loading NFTs...', type: 'loading' }
-            }));
-
+          setState(prev => ({
+            ...prev,
+            notification: { message: 'Loading NFTs...', type: 'loading' }
+          }));
 
           const res = await state.contract.functions.get_total_count().txParams({ gasLimit: 100_000 }).get();
           const totalCount = new BN(res.value).toNumber();
-  
+
           const nfts: any[] = [];
-  
+
           for (let i = 1; i <= totalCount; i++) {
             const nftData = await state.contract.functions.get_nft_data(i).txParams({ gasLimit: 100_000 }).get();
-            
+
             if (nftData.value.uri) {
               nftData.value.uri = nftData.value.uri.slice(0, -1);
             }
+            const unlocked = false;
             const data = await pinata.gateways.get(`https://beige-sophisticated-baboon-74.mypinata.cloud/ipfs/${nftData.value.uri}`);
             const mergedNFTData = {
               ...(typeof nftData.value === 'object' ? nftData.value : {}),
               ...(typeof data.data === 'object' ? data.data : {}),
+              unlocked: unlocked 
             };
             nfts.push(mergedNFTData);
+
           }
-
-            setState(prev => ({
-              ...prev,
-              nfts,
-              notification: { message: 'NFTs loaded successfully!', type: 'success' }
-            }));
-
+          
+          setState(prev => ({ ...prev, nfts, shouldFetchNFTs: false }));
+          setState(prev => ({
+            ...prev,
+            notification: { message: 'NFTs loaded', type: 'success' }
+          }));
         } catch (error) {
           console.error('Error fetching NFTs:', error);
           setState(prev => ({
@@ -126,29 +128,33 @@ const App: React.FC = () => {
       }
     }
     getAllNFTs();
-  }, [state.contract]);
+  }, [state.contract, state.shouldFetchNFTs]);
 
-  const mintNFT = async (uri: string): Promise<void> => {
+  const mintNFT = async (uri: string, price: string): Promise<void> => {
     if (!state.contract) {
       return alert("Contract not loaded");
     }
-  
+
     try {
+      const priceInput = bn.parseUnits(price);
       const subID = ethers.sha256(ethers.toUtf8Bytes(uri));
       if (uri.length < 60) {
         uri = uri.padEnd(60, '0');
       }
-  
-      console.log(state.address, subID, uri);
-      await state.contract.functions.mint(subID, uri).call();
-  
-      setState(prev => ({
-        ...prev,
-        notification: { message: 'Minting successful!', type: 'success' }
-      }));
-  
-      window.location.reload();
-  
+
+      const response = await state.contract.functions.mint(subID, uri, priceInput).call();
+      const res = await response.waitForResult()
+      if(res.transactionResult.isStatusSuccess
+      ) {
+        setState(prev => ({
+          ...prev,
+          notification: { message: 'Minting successful!', type: 'success' },
+          shouldFetchNFTs: true 
+        }));
+      }
+
+      onRouteChange("explore");
+
     } catch (error) {
       console.error('Error minting NFT:', error);
       setState(prev => ({
@@ -157,7 +163,6 @@ const App: React.FC = () => {
       }));
     }
   };
-  
 
   const onConnect = async () => {
     connect("Fuel Wallet");
@@ -178,7 +183,7 @@ const App: React.FC = () => {
         name: name,
         description: description,
         price: price,
-        image: `https://beige-sophisticated-baboon-74.mypinata.cloud/ipfs/${uploadImage.IpfsHash}`,
+        video: `https://beige-sophisticated-baboon-74.mypinata.cloud/ipfs/${uploadImage.IpfsHash}`,
       });
       return metadata.IpfsHash;
     } catch (error) {
@@ -186,6 +191,43 @@ const App: React.FC = () => {
       throw new Error("Upload to Pinata failed.");
     }
   };
+
+  const handlePayClick = async (id: string, price: number) : Promise<boolean> => {
+    let res;
+    if(state.contract) {
+      try {
+        const priceInput = bn.parseUnits(price.toString());
+        const baseAssetId = state.contract.provider.getBaseAssetId();
+        const result = await state.contract.functions.buy_nft(id).txParams({ variableOutputs: 1 }).callParams({ forward: [priceInput, baseAssetId] }).call();
+        const wait = await result.waitForResult();
+        res = wait.transactionResult.isStatusSuccess;
+        setState(prev => ({
+          ...prev,
+          notification: { message: 'Enjoy your Video', type: 'success' }
+        }));
+      } catch (e) {
+        console.log("error", e);
+        setState(prev => ({
+          ...prev,
+          notification: { message: "Failed", type: 'error' }
+        }));
+      }
+    }
+    if(res) {
+      setState(prev => {
+        const updatedNFTs = prev.nfts.map(nft => {
+          if (nft.id === id) { 
+            return { ...nft, unlocked: true }; 
+          }
+          return nft;
+        });
+        return { ...prev, nfts: updatedNFTs };
+      });
+      return true;
+    } else {
+      return false;
+    }
+  }
 
   return (
     <div>
@@ -198,7 +240,7 @@ const App: React.FC = () => {
       />
       {state.route === "explore" ? (
         <Scroll>
-          <Explore nfts={state.nfts} isConnected={isConnected} />
+          <Explore nfts={state.nfts} isConnected={isConnected} handlePayClick={handlePayClick}/>
         </Scroll>
       ) : state.route === "mint" ? (
         <Mint uploadToPinata={uploadToPinata} mintNFT={mintNFT} />

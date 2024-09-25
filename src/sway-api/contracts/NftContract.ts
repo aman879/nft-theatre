@@ -24,6 +24,8 @@ import type {
 
 import type { Option, Enum } from "./common";
 
+export enum BuyErrorInput { IncorrectAssetId = 'IncorrectAssetId', NotEnoughTokens = 'NotEnoughTokens' };
+export enum BuyErrorOutput { IncorrectAssetId = 'IncorrectAssetId', NotEnoughTokens = 'NotEnoughTokens' };
 export type IdentityInput = Enum<{ Address: AddressInput, ContractId: ContractIdInput }>;
 export type IdentityOutput = Enum<{ Address: AddressOutput, ContractId: ContractIdOutput }>;
 export enum MintErrorInput { CannotMintMoreThanOneNFTWithSubId = 'CannotMintMoreThanOneNFTWithSubId', NFTAlreadyMinted = 'NFTAlreadyMinted' };
@@ -35,8 +37,8 @@ export type AssetIdInput = { bits: string };
 export type AssetIdOutput = AssetIdInput;
 export type ContractIdInput = { bits: string };
 export type ContractIdOutput = ContractIdInput;
-export type NFTDataInput = { id: BigNumberish, owner: IdentityInput, uri: string };
-export type NFTDataOutput = { id: BN, owner: IdentityOutput, uri: string };
+export type NFTDataInput = { id: BigNumberish, owner: IdentityInput, uri: string, price: BigNumberish, total_bought: BigNumberish };
+export type NFTDataOutput = { id: BN, owner: IdentityOutput, uri: string, price: BN, total_bought: BN };
 
 const abi = {
   "programType": "contract",
@@ -52,14 +54,19 @@ const abi = {
       "concreteTypeId": "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b"
     },
     {
+      "type": "enum error::BuyError",
+      "concreteTypeId": "96d7a476a38bf950f66d6e66b636510e5b3d4c7483cb2d6ef895a1d940182406",
+      "metadataTypeId": 0
+    },
+    {
       "type": "enum error::MintError",
       "concreteTypeId": "916cde9a36b8768ce09f0c573c2af5479b0c48ed096dd2292679a062e18405ef",
-      "metadataTypeId": 0
+      "metadataTypeId": 1
     },
     {
       "type": "enum std::option::Option<b256>",
       "concreteTypeId": "0c2beb9013490c4f753f2757dfe2d8340b22ce3827d596d81d249b7038033cb6",
-      "metadataTypeId": 2,
+      "metadataTypeId": 3,
       "typeArguments": [
         "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b"
       ]
@@ -71,12 +78,12 @@ const abi = {
     {
       "type": "struct NFTData",
       "concreteTypeId": "2e9bd7d259db33258349d99eca49fa858fcdbac5099ee987b1c02921fb26873d",
-      "metadataTypeId": 4
+      "metadataTypeId": 5
     },
     {
       "type": "struct std::asset_id::AssetId",
       "concreteTypeId": "c0710b6731b1dd59799cf6bef33eee3b3b04a2e40e80a0724090215bbf2ca974",
-      "metadataTypeId": 6
+      "metadataTypeId": 7
     },
     {
       "type": "u64",
@@ -85,8 +92,22 @@ const abi = {
   ],
   "metadataTypes": [
     {
-      "type": "enum error::MintError",
+      "type": "enum error::BuyError",
       "metadataTypeId": 0,
+      "components": [
+        {
+          "name": "IncorrectAssetId",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
+        },
+        {
+          "name": "NotEnoughTokens",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
+        }
+      ]
+    },
+    {
+      "type": "enum error::MintError",
+      "metadataTypeId": 1,
       "components": [
         {
           "name": "CannotMintMoreThanOneNFTWithSubId",
@@ -100,21 +121,21 @@ const abi = {
     },
     {
       "type": "enum std::identity::Identity",
-      "metadataTypeId": 1,
+      "metadataTypeId": 2,
       "components": [
         {
           "name": "Address",
-          "typeId": 5
+          "typeId": 6
         },
         {
           "name": "ContractId",
-          "typeId": 7
+          "typeId": 8
         }
       ]
     },
     {
       "type": "enum std::option::Option",
-      "metadataTypeId": 2,
+      "metadataTypeId": 3,
       "components": [
         {
           "name": "None",
@@ -122,20 +143,20 @@ const abi = {
         },
         {
           "name": "Some",
-          "typeId": 3
+          "typeId": 4
         }
       ],
       "typeParameters": [
-        3
+        4
       ]
     },
     {
       "type": "generic T",
-      "metadataTypeId": 3
+      "metadataTypeId": 4
     },
     {
       "type": "struct NFTData",
-      "metadataTypeId": 4,
+      "metadataTypeId": 5,
       "components": [
         {
           "name": "id",
@@ -143,26 +164,24 @@ const abi = {
         },
         {
           "name": "owner",
-          "typeId": 1
+          "typeId": 2
         },
         {
           "name": "uri",
           "typeId": "7d01ef1a17787dea629de1bf499142ae506f0a213f985243d18928aef5354429"
+        },
+        {
+          "name": "price",
+          "typeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
+        },
+        {
+          "name": "total_bought",
+          "typeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
         }
       ]
     },
     {
       "type": "struct std::address::Address",
-      "metadataTypeId": 5,
-      "components": [
-        {
-          "name": "bits",
-          "typeId": "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b"
-        }
-      ]
-    },
-    {
-      "type": "struct std::asset_id::AssetId",
       "metadataTypeId": 6,
       "components": [
         {
@@ -172,8 +191,18 @@ const abi = {
       ]
     },
     {
-      "type": "struct std::contract_id::ContractId",
+      "type": "struct std::asset_id::AssetId",
       "metadataTypeId": 7,
+      "components": [
+        {
+          "name": "bits",
+          "typeId": "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b"
+        }
+      ]
+    },
+    {
+      "type": "struct std::contract_id::ContractId",
+      "metadataTypeId": 8,
       "components": [
         {
           "name": "bits",
@@ -183,6 +212,29 @@ const abi = {
     }
   ],
   "functions": [
+    {
+      "inputs": [
+        {
+          "name": "id",
+          "concreteTypeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
+        }
+      ],
+      "name": "buy_nft",
+      "output": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+      "attributes": [
+        {
+          "name": "storage",
+          "arguments": [
+            "read",
+            "write"
+          ]
+        },
+        {
+          "name": "payable",
+          "arguments": []
+        }
+      ]
+    },
     {
       "inputs": [],
       "name": "constructor",
@@ -236,6 +288,10 @@ const abi = {
         {
           "name": "_uri",
           "concreteTypeId": "7d01ef1a17787dea629de1bf499142ae506f0a213f985243d18928aef5354429"
+        },
+        {
+          "name": "_price",
+          "concreteTypeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
         }
       ],
       "name": "mint",
@@ -252,6 +308,10 @@ const abi = {
     }
   ],
   "loggedTypes": [
+    {
+      "logId": "10869337055138937168",
+      "concreteTypeId": "96d7a476a38bf950f66d6e66b636510e5b3d4c7483cb2d6ef895a1d940182406"
+    },
     {
       "logId": "10478995186908690060",
       "concreteTypeId": "916cde9a36b8768ce09f0c573c2af5479b0c48ed096dd2292679a062e18405ef"
@@ -282,6 +342,7 @@ export class NftContractInterface extends Interface {
   }
 
   declare functions: {
+    buy_nft: FunctionFragment;
     constructor: FunctionFragment;
     get_nft_data: FunctionFragment;
     get_total_count: FunctionFragment;
@@ -295,10 +356,11 @@ export class NftContract extends Contract {
 
   declare interface: NftContractInterface;
   declare functions: {
+    buy_nft: InvokeFunction<[id: BigNumberish], void>;
     constructor: InvokeFunction<[], void>;
     get_nft_data: InvokeFunction<[id: BigNumberish], NFTDataOutput>;
     get_total_count: InvokeFunction<[], BN>;
-    mint: InvokeFunction<[sub_id: Option<string>, _uri: string], AssetIdOutput>;
+    mint: InvokeFunction<[sub_id: Option<string>, _uri: string, _price: BigNumberish], AssetIdOutput>;
   };
 
   constructor(

@@ -19,7 +19,7 @@ const Navbar: React.FC<NavbarProps> = ({ onRouteChange, isConnected, connect, ad
   return (
     <nav>
       <div className="nav-left">
-        <p>NFT Marketplace</p>
+        <p>NFT Theater</p>
       </div>
       <div className="nav-right">
         <p onClick={() => onRouteChange("explore")}>Explore</p>

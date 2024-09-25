@@ -8,3 +8,8 @@ pub enum MintError {
 pub enum SetError {
     ValueAlreadySet: (),
 }
+
+pub enum BuyError {
+    IncorrectAssetId: (),
+    NotEnoughTokens: (),
+}

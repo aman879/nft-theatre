@@ -2,17 +2,26 @@ contract;
 
 mod error;
 
-use error::{MintError, SetError};
+use error::{MintError, SetError, BuyError};
 
 use std::{
+    storage::storage_vec::*,
     auth::msg_sender,
     hash::Hash,
+    call_frames::msg_asset_id,
+    context::{
+        msg_amount,
+        this_balance,
+    },
+    asset::transfer,
 };
 
 struct NFTData{
     id: u64,
     owner: Identity,
     uri: str[60],
+    price: u64,
+    total_bought: u64,
 }
 
 abi NFT {
@@ -20,7 +29,10 @@ abi NFT {
     fn constructor();
 
     #[storage(read, write)]
-    fn mint(sub_id: Option<SubId>, _uri:str[60]) -> AssetId;
+    fn mint(sub_id: Option<SubId>, _uri:str[60], _price: u64) -> AssetId;
+
+    #[storage(read, write), payable]
+    fn buy_nft(id: u64);
 
     #[storage(read)]
     fn get_total_count() -> u64;
@@ -37,6 +49,7 @@ storage {
     total_supply: StorageMap<AssetId, u64> = StorageMap {},
 }
 
+
 impl NFT for Contract {
     #[storage(write)]
     fn constructor() {
@@ -45,7 +58,7 @@ impl NFT for Contract {
     }
 
     #[storage(read, write)]
-    fn mint( sub_id: Option<SubId>, _uri:str[60]) -> AssetId {
+    fn mint( sub_id: Option<SubId>, _uri:str[60], _price: u64) -> AssetId {
         let sender = msg_sender().unwrap();
         let asset_id = AssetId::new(ContractId::this(), sub_id.unwrap_or(b256::zero()));
         require(
@@ -62,11 +75,31 @@ impl NFT for Contract {
             id: storage.item_counter.try_read().unwrap(),
             owner: sender,
             uri: _uri,
+            price: _price,
+            total_bought: 0,
         };
 
         storage.item_map.insert(storage.item_counter.try_read().unwrap(), new_item);
 
         asset_id
+    }
+
+    #[storage(read, write), payable]
+    fn buy_nft(id: u64) {
+        let asset_id = msg_asset_id();
+        require(asset_id == AssetId::base(), BuyError::IncorrectAssetId);
+
+        let amount = msg_amount();
+        
+        let mut nft = storage.item_map.get(id).try_read().unwrap();
+
+        require(amount >= nft.price, BuyError::NotEnoughTokens);
+
+        nft.total_bought += 1;
+
+        storage.item_map.insert(id, nft);
+
+        transfer(nft.owner, asset_id, amount);
     }
 
     #[storage(read)]
